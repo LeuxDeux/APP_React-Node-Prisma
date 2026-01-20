@@ -1,0 +1,13 @@
+# Dependencias
+node_modules/
+*/node_modules/
+
+# Env ❤
+.env
+.env.local
+
+# Builds
+build/
+dist/
+uploads/*
+!/uploads/.gitkeep
