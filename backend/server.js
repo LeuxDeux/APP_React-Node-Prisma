@@ -11,7 +11,8 @@ app.use(express.json());
 
 
 app.use('/api/products', require('./routes/products'));
-
+app.use('/api/users', require('./routes/users'));//Ruta para usuarios
+app.use('/api/auth', require('./routes/auth'));//Ruta para autenticacion
 
 app.get('/api/health', (req, res) => {
     res.json({ 
