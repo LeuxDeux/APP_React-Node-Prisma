@@ -13,7 +13,6 @@ app.use(express.json());
 app.use('/api/products', require('./routes/products'));
 
 
-
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'Server is running',
