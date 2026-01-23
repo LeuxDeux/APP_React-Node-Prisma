@@ -20,7 +20,7 @@ const authController = {
       }
 
       const [users] = await pool.query(
-        "SELECT id, username, password FROM users WHERE username = ?",
+        "SELECT id, username, password, role FROM users WHERE username = ?",
         [username],
       );
 
@@ -38,7 +38,7 @@ const authController = {
       }
 
       // Payload mínimo necesario
-      const payload = { id: user.id, username: user.username };
+      const payload = { id: user.id, username: user.username, role: user.role };
 
       const token = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN || "1h",
