@@ -31,6 +31,32 @@ const authServices = {
   isAuthenticated: () => {
     return !!localStorage.getItem('token');
   },
+
+  // Validar token con el backend y obtener datos del usuario
+  validateToken: async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      // Llamar al backend para validar el token
+      const response = await api.get('auth/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.success) {
+        return response.data.user;
+      }
+      throw new Error('Token validation failed');
+    } catch (error) {
+      // Si el token es inválido, eliminarlo
+      localStorage.removeItem('token');
+      throw error;
+    }
+  },
 };
 
 export default authServices;

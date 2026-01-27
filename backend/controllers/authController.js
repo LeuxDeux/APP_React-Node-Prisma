@@ -26,9 +26,7 @@ const authController = {
 
       // Asumimos fallo por defecto para evitar enumeración
       const user = users[0];
-      const validPassword = user
-        ? await bcrypt.compare(password, user.password)
-        : false;
+      const validPassword = user ? await bcrypt.compare(password, user.password) : false;
 
       if (!user || !validPassword) {
         return res.status(401).json({
@@ -51,6 +49,45 @@ const authController = {
       });
     } catch (error) {
       console.error("[AuthError]:", error); // Log interno detallado
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error",
+      });
+    }
+  },
+
+  // Validar token y devolver datos del usuario
+  validateToken: async (req, res) => {
+    try {
+      // El middleware authMiddleware debe extraer el user del token y guardarlo en req.user
+      const user = req.user;
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          error: "Invalid token",
+        });
+      }
+
+      // Obtener datos actualizados del usuario desde la BD
+      const [users] = await pool.query(
+        "SELECT id, username, role FROM users WHERE id = ?",
+        [user.id]
+      );
+
+      if (users.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        user: users[0],
+      });
+    } catch (error) {
+      console.error("[AuthValidateError]:", error);
       return res.status(500).json({
         success: false,
         error: "Internal server error",
