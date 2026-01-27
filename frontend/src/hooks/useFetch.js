@@ -1,39 +1,39 @@
 import { useState, useEffect } from "react";
 
 export const useFetch = (url)  => {
-	const [data, setData] = useState(null)
-	const [loading, setLoading] = useState(true)
-	const [error, setError] = useState(null) 
+	const [data, setData] = useState(null) // Estado para almacenar los datos
+	const [loading, setLoading] = useState(true) // Estado de carga
+	const [error, setError] = useState(null) // Estado para almacenar errores
 	
 	useEffect(() => {
-		let controller = new AbortController();
+		let controller = new AbortController(); // Para cancelar la petición si el componente se desmonta
 		
-		setLoading(true)
+		setLoading(true) // Iniciamos la carga cuando se monta el componente
 		
-		const fetchData = async () => {
+		const fetchData = async () => { // Función asíncrona para obtener los datos
 			try {
-				const response = await fetch(url, controller);
+				const response = await fetch(url, controller); // Realizamos la petición
 				
 				if(!response.ok) {
-					throw new Error("Error en la petición")
+					throw new Error("Error en la petición") // Si la respuesta no es ok, lanzamos un error
 				}
 				
-				const jsonData = await response.json();
+				const jsonData = await response.json(); // Parseamos la respuesta a JSON
 				
-				setData(jsonData)
-				setError(null)
+				setData(jsonData) // Actualizamos el estado con los datos obtenidos
+				setError(null) // Reseteamos el estado de error
 			} catch (err){
-				setError(err)
+				setError(err) // Actualizamos el estado con el error
 			} finally {
-				setLoading(false)
+				setLoading(false) // Finalizamos la carga haya sido error o no
 			}
 		}
-		fetchData();
+		fetchData(); // Llamamos a la función para obtener los datos
 		
 		return () => {
-		controller.abort()
+		controller.abort() // Cancelamos la petición si el componente se desmonta
 		}
 		
 	}, [url])
-	return { data, loading, error }
+	return { data, loading, error } // Devolvemos los estados
 }
