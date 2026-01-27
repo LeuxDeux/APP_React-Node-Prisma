@@ -1,6 +1,6 @@
 import api from "./api";
 
-export const productsAPI = {
+export const usersAPI = {
   getAllUsers: () => api.get("users/"),
 
   getUserByID: (id) => api.get(`users/${id}`),
