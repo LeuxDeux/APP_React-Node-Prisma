@@ -1,7 +1,7 @@
-import logo from "./logo.svg";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
-import { PrivateRoute } from "./components/PrivateRoute";
+import PrivateRoute from "./components/PrivateRoute";
+import LoginForm from "./components/LoginForm";
 import {
   BrowserRouter as Router,
   Routes,
@@ -9,12 +9,13 @@ import {
   Navigate,
 } from "react-router-dom";
 
+
 function App() {
   return (
     <Router>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<div> Login de Componente </div>} />
+          <Route path="/login" element={<LoginForm />} />
 
           <Route path="/products" element={<PrivateRoute>
             <div> Productos Componente - Solo usuarios autenticados </div>
@@ -24,24 +25,7 @@ function App() {
             <div> Usuarios Componente - Solo usuarios autenticados </div>
           </PrivateRoute>} />
 
-          <Route path="/" element={<Navigate to="/login" />} />
-
-          <div className="App">
-            <header className="App-header">
-              <img src={logo} className="App-logo" alt="logo" />
-              <p>
-                Edit <code>src/App.js</code> and save to reload.
-              </p>
-              <a
-                className="App-link"
-                href="https://reactjs.org"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Learn React
-              </a>
-            </header>
-          </div>
+          <Route path="/" element={<Navigate to="/auth/" />} />
         </Routes>
       </AuthProvider>
     </Router>
