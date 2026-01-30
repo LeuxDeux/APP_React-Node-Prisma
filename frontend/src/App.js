@@ -25,7 +25,7 @@ function App() {
             <div> Usuarios Componente - Solo usuarios autenticados </div>
           </PrivateRoute>} />
 
-          <Route path="/" element={<Navigate to="/auth/" />} />
+          <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
       </AuthProvider>
     </Router>
