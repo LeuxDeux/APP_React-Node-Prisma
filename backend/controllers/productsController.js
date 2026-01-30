@@ -100,10 +100,8 @@ const productsController = {
     const { id } = req.params;
     const { name, description, price, category, stock } = req.body;
     try {
-      if (
-        (await pool.query("SELECT * FROM products WHERE id = ?;", [id])[0]
-          .length) === 0
-      ) {
+      const [products] = await pool.query("SELECT * FROM products WHERE id = ?;", [id]);
+      if (products.length === 0) {
         return res.status(404).json({
           success: false,
           error: "Product not found",
