@@ -3,6 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import LoginForm from "./components/LoginForm";
 import Dashboard from "./components/Dashboard";
+import ProductList from "./components/ProductList";
 import {
   BrowserRouter as Router,
   Routes,
@@ -23,7 +24,7 @@ function App() {
           </PrivateRoute>} />
 
           <Route path="/products" element={<PrivateRoute>
-            <div> Productos Componente Products - Solo usuarios autenticados </div>
+            <ProductList />
           </PrivateRoute>} />
 
           <Route path="/users" element={<PrivateRoute>

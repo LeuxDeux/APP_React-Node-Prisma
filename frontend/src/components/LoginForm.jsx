@@ -24,7 +24,7 @@ const LoginForm = () => {
         
         if (success) {
             // Redirigir a productos si el login es exitoso
-            navigate("/products");
+            navigate("/dashboard");
         } else {
             // Mostrar error si el login falla
             setError("Credenciales incorrectas. Intenta de nuevo.");
