@@ -30,7 +30,7 @@ function App() {
             <div> Usuarios Componente Users - Solo usuarios autenticados </div>
           </PrivateRoute>} />
 
-          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
       </AuthProvider>
     </Router>
