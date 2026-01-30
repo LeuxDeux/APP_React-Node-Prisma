@@ -18,11 +18,11 @@ function App() {
           <Route path="/login" element={<LoginForm />} />
 
           <Route path="/products" element={<PrivateRoute>
-            <div> Productos Componente - Solo usuarios autenticados </div>
+            <div> Productos Componente Products - Solo usuarios autenticados </div>
           </PrivateRoute>} />
 
           <Route path="/users" element={<PrivateRoute>
-            <div> Usuarios Componente - Solo usuarios autenticados </div>
+            <div> Usuarios Componente Users - Solo usuarios autenticados </div>
           </PrivateRoute>} />
 
           <Route path="/" element={<Navigate to="/login" />} />
