@@ -8,7 +8,7 @@ function UserForm({ userToEdit, onSuccess, onClose }) {
     username: "",
     password: "",
     address: "",
-    phone: "",
+    phonenumber: "",
     email: "",
     role: "",
   });
@@ -28,7 +28,7 @@ function UserForm({ userToEdit, onSuccess, onClose }) {
       setFormData({
         username: userToEdit.username,
         address: userToEdit.address,
-        phone: userToEdit.phone,
+        phonenumber: userToEdit.phonenumber,
         email: userToEdit.email,
         role: userToEdit.role,
       });
@@ -38,7 +38,7 @@ function UserForm({ userToEdit, onSuccess, onClose }) {
         username: "",
         password: "",
         address: "",
-        phone: "",
+        phonenumber: "",
         email: "",
         role: "",
       });
@@ -64,7 +64,7 @@ function UserForm({ userToEdit, onSuccess, onClose }) {
       !formData.username ||
       (!userToEdit && !formData.password) ||
       !formData.address ||
-      !formData.phone ||
+      !formData.phonenumber ||
       !formData.email ||
       !formData.role
     ) {
@@ -145,8 +145,8 @@ function UserForm({ userToEdit, onSuccess, onClose }) {
           <label>Teléfono:</label>
           <input
             type="text"
-            name="phone"
-            value={formData.phone} // Valor del campo teléfono del estado
+            name="phonenumber"
+            value={formData.phonenumber} // Valor del campo teléfono del estado
             onChange={handleChange} // Manejador del cambio para actualizar el estado, lo ejecuta al escribir
             style={{ width: "100%", padding: "8px" }}
           />
