@@ -1,10 +1,10 @@
-const pool = require("../config/database");
+const prisma = require("../config/prisma");
 const bcrypt = require("bcryptjs");
 
 const usersController = {
   getAllUsers: async (req, res) => {
     try {
-      const [users] = await pool.query("SELECT * FROM users;");
+      const users = await prisma.user.findMany();
       res.json({
         success: true,
         users,
@@ -20,11 +20,10 @@ const usersController = {
   getUserByID: async (req, res) => {
     const { id } = req.params;
     try {
-      const [user] = await pool.query(
-        "SELECT * FROM users WHERE id = ?;",
-        [id],
-      );
-      if (user.length === 0) {
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(id) },
+      });
+      if (!user) {
         return res.status(404).json({
           success: false,
           error: "User not found",
@@ -32,7 +31,7 @@ const usersController = {
       }
       res.json({
         success: true,
-        user: user[0],
+        user,
       });
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -52,28 +51,19 @@ const usersController = {
     }
     try {
       const passwordHash = await bcrypt.hash(password, 10);
-      const query =
-        "INSERT INTO users (username, password, address, phonenumber, email) VALUES (?, ?, ?, ?, ?);";
-      const [result] = await pool.query(query, [
-        username,
-        passwordHash,
-        address,
-        phonenumber,
-        email,
-      ]);
-
-      const queryGetUser = "SELECT * FROM users WHERE id = ?;";
-      const [newUser] = await pool.query(queryGetUser, [result.insertId]);
-      if(newUser.length === 0){
-        return res.status(404).json({
-          success: false,
-          error: "User not found after creation",
-        });
-      }
+      const newUser = await prisma.user.create({
+        data: {
+          username,
+          password: passwordHash,
+          address,
+          phonenumber,
+          email,
+        },
+      });
 
       res.status(201).json({
         success: true,
-        userId: result.insertId,
+        userId: newUser.id,
         message: "User created successfully",
       });
     } catch (error) {
@@ -87,19 +77,20 @@ const usersController = {
   deleteUserByID: async (req, res) => {
     const { id } = req.params;
     try {
-      const query = "DELETE FROM users WHERE id = ?;";
-      const [result] = await pool.query(query, [id]);
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          error: "User not found",
-        });
-      }
+      await prisma.user.delete({
+        where: { id: parseInt(id) },
+      });
       res.json({
         success: true,
         message: "User deleted successfully",
       });
     } catch (error) {
+      if (error.code === "P2025") {
+        return res.status(404).json({
+          success: false,
+          error: "User not found",
+        });
+      }
       console.error("Error deleting user:", error);
       res.status(500).json({
         success: false,
@@ -111,34 +102,26 @@ const usersController = {
     const { id } = req.params;
     const { username, address, phonenumber, email } = req.body;
     try {
-      if (
-        (await pool.query("SELECT id FROM users WHERE id = ?;", [id])).length === 0
-      ) {
-        return res.status(404).json({
-          success: false,
-          error: "User not found",
-        });
-      }
-      const query =
-        "UPDATE users SET username = ?, address = ?, phonenumber = ?, email = ? WHERE id = ?;";
-      const [result] = await pool.query(query, [
-        username,
-        address,
-        phonenumber,
-        email,
-        id
-      ]);
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          error: "User not found",
-        });
-      }
+      await prisma.user.update({
+        where: { id: parseInt(id) },
+        data: {
+          username,
+          address,
+          phonenumber,
+          email,
+        },
+      });
       res.json({
         success: true,
         message: "User updated successfully",
       });
     } catch (error) {
+      if (error.code === "P2025") {
+        return res.status(404).json({
+          success: false,
+          error: "User not found",
+        });
+      }
       console.error("Error updating user:", error);
       res.status(500).json({
         success: false,

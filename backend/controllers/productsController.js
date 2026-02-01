@@ -1,9 +1,9 @@
-const pool = require("../config/database");
+const prisma = require("../config/prisma");
 
 const productsController = {
   getAllProducts: async (req, res) => {
     try {
-      const [products] = await pool.query("SELECT * FROM products;");
+      const products = await prisma.product.findMany();
       res.json({
         success: true,
         products,
@@ -19,11 +19,10 @@ const productsController = {
   getProductByID: async (req, res) => {
     const { id } = req.params;
     try {
-      const [product] = await pool.query(
-        "SELECT * FROM products WHERE id = ?;",
-        [id],
-      );
-      if (product.length === 0) {
+      const product = await prisma.product.findUnique({
+        where: { id: parseInt(id) },
+      });
+      if (!product) {
         return res.status(404).json({
           success: false,
           error: "Product not found",
@@ -31,7 +30,7 @@ const productsController = {
       }
       res.json({
         success: true,
-        product: product[0],
+        product,
       });
     } catch (error) {
       console.error("Error fetching product:", error);
@@ -50,19 +49,19 @@ const productsController = {
       });
     }
     try {
-      const query =
-        "INSERT INTO products (name, description, price, category, stock) VALUES (?, ?, ?, ?, ?);";
-      const [result] = await pool.query(query, [
-        name,
-        description,
-        price,
-        category,
-        stock,
-      ]);
+      const product = await prisma.product.create({
+        data: {
+          name,
+          description,
+          price: parseFloat(price),
+          category,
+          stock: parseInt(stock),
+        },
+      });
 
       res.status(201).json({
         success: true,
-        productId: result.insertId,
+        productId: product.id,
         message: "Product created successfully",
       });
     } catch (error) {
@@ -76,19 +75,20 @@ const productsController = {
   deleteProductByID: async (req, res) => {
     const { id } = req.params;
     try {
-      const query = "DELETE FROM products WHERE id = ?;";
-      const [result] = await pool.query(query, [id]);
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          error: "Product not found",
-        });
-      }
+      await prisma.product.delete({
+        where: { id: parseInt(id) },
+      });
       res.json({
         success: true,
         product: "Product deleted successfully",
       });
     } catch (error) {
+      if (error.code === "P2025") {
+        return res.status(404).json({
+          success: false,
+          error: "Product not found",
+        });
+      }
       console.error("Error deleting product:", error);
       res.status(500).json({
         success: false,
@@ -100,34 +100,27 @@ const productsController = {
     const { id } = req.params;
     const { name, description, price, category, stock } = req.body;
     try {
-      const [products] = await pool.query("SELECT * FROM products WHERE id = ?;", [id]);
-      if (products.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: "Product not found",
-        });
-      }
-      const query =
-        "UPDATE products SET name = ?, description = ?, price = ?, category = ?, stock = ? WHERE id = ?;";
-      const [result] = await pool.query(query, [
-        name,
-        description,
-        price,
-        category,
-        stock,
-        id,
-      ]);
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          error: "Product not found",
-        });
-      }
+      await prisma.product.update({
+        where: { id: parseInt(id) },
+        data: {
+          name,
+          description,
+          price: parseFloat(price),
+          category,
+          stock: parseInt(stock),
+        },
+      });
       res.json({
         success: true,
         message: "Product updated successfully",
       });
     } catch (error) {
+      if (error.code === "P2025") {
+        return res.status(404).json({
+          success: false,
+          error: "Product not found",
+        });
+      }
       console.error("Error updating product:", error);
       res.status(500).json({
         success: false,

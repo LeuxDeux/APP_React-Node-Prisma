@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(100)
+  description String?   @db.Text
+  price       Decimal   @db.Decimal(10, 2)
+  category    String?   @db.VarChar(50)
+  stock       Int?      @default(0)
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("products")
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  username    String    @unique @db.VarChar(45)
+  password    String    @db.VarChar(100)
+  address     String?   @db.VarChar(45)
+  phonenumber String?   @db.VarChar(30)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  lastLogin   DateTime? @map("last_login") @db.Timestamp(0)
+  email       String?   @unique @db.VarChar(45)
+  isActive    Boolean?  @default(true) @map("isActive")
+  role        Role      @default(user)
+
+  @@map("users")
+}
+
+enum Role {
+  user
+  admin
+}

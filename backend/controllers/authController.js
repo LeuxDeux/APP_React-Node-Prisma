@@ -1,4 +1,4 @@
-const pool = require("../config/database");
+const prisma = require("../config/prisma");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -19,13 +19,11 @@ const authController = {
         });
       }
 
-      const [users] = await pool.query(
-        "SELECT id, username, password, role FROM users WHERE username = ?",
-        [username],
-      );
+      const user = await prisma.user.findUnique({
+        where: { username },
+      });
 
       // Asumimos fallo por defecto para evitar enumeración
-      const user = users[0];
       const validPassword = user ? await bcrypt.compare(password, user.password) : false;
 
       if (!user || !validPassword) {
@@ -70,12 +68,12 @@ const authController = {
       }
 
       // Obtener datos actualizados del usuario desde la BD
-      const [users] = await pool.query(
-        "SELECT id, username, role FROM users WHERE id = ?",
-        [user.id]
-      );
+      const userData = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { id: true, username: true, role: true },
+      });
 
-      if (users.length === 0) {
+      if (!userData) {
         return res.status(404).json({
           success: false,
           error: "User not found",
@@ -84,7 +82,7 @@ const authController = {
 
       return res.status(200).json({
         success: true,
-        user: users[0],
+        user: userData,
       });
     } catch (error) {
       console.error("[AuthValidateError]:", error);
