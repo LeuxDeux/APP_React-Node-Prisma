@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { productsAPI } from '../services/productServices';
+import { productsAPI } from '../../../services/productServices';
 import ProductForm from './ProductForm';
+import { useNavigate } from 'react-router-dom';
 
 //Import de hooks, useState para productos, carga, error mostrar formulario y editar producto.
 //Componente principal ProductList que maneja la lista de productos.
@@ -34,6 +35,10 @@ function ProductList() {
     } finally {
       setLoading(false);
     }
+  };
+  const navigate = useNavigate();
+  const handleBack = () => {
+    navigate("/dashboard");
   };
   //Manejador del botón "Nuevo Producto".
   const handleNewProduct = () => {
@@ -73,12 +78,26 @@ function ProductList() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+      <button
+        className="btn btn-back"
+        onClick={handleBack}
+        title="Volver al Dashboard"
+      >
+        ← Atrás
+      </button>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: "20px",
+        }}
+      >
         <h1>Productos</h1>
-        <button onClick={handleNewProduct}>+ Nuevo Producto</button> {/* Botón para crear un nuevo producto */}
+        <button onClick={handleNewProduct}>+ Nuevo Producto</button>{" "}
+        {/* Botón para crear un nuevo producto */}
       </div>
 
-      {error && <div style={{ color: 'red' }}>{error}</div>}
+      {error && <div style={{ color: "red" }}>{error}</div>}
 
       {showForm && (
         <ProductForm
@@ -88,8 +107,12 @@ function ProductList() {
         />
       )}
 
-      {!showForm && (  // Muestra la lista de productos solo si el formulario no está visible
-        <table border="1" cellPadding="10" style={{ width: '100%', marginTop: '20px' }}>
+      {!showForm && ( // Muestra la lista de productos solo si el formulario no está visible
+        <table
+          border="1"
+          cellPadding="10"
+          style={{ width: "100%", marginTop: "20px" }}
+        >
           <thead>
             <tr>
               <th>ID</th>
@@ -102,24 +125,35 @@ function ProductList() {
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (  // Itera sobre la lista de productos y muestra cada uno en una fila de la tabla
-              <tr key={product.id}>
-                <td>{product.id}</td>
-                <td>{product.name}</td>
-                <td>{product.description}</td>
-                <td>${product.price}</td>
-                <td>{product.category}</td>
-                <td>{product.stock}</td>
-                <td>
-                  <button onClick={() => handleEditProduct(product)}>  {/* Botón para editar el producto */}
-                    Editar
-                  </button>
-                  <button onClick={() => handleDeleteProduct(product.id)} style={{ marginLeft: '5px' }}> {/* Botón para eliminar el producto */}
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {products.map(
+              (
+                product, // Itera sobre la lista de productos y muestra cada uno en una fila de la tabla
+              ) => (
+                <tr key={product.id}>
+                  <td>{product.id}</td>
+                  <td>{product.name}</td>
+                  <td>{product.description}</td>
+                  <td>${product.price}</td>
+                  <td>{product.category}</td>
+                  <td>{product.stock}</td>
+                  <td>
+                    <button onClick={() => handleEditProduct(product)}>
+                      {" "}
+                      {/* Botón para editar el producto */}
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProduct(product.id)}
+                      style={{ marginLeft: "5px" }}
+                    >
+                      {" "}
+                      {/* Botón para eliminar el producto */}
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ),
+            )}
           </tbody>
         </table>
       )}

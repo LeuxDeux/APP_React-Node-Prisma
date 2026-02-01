@@ -1,39 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import api from "../services/api"; // Su instancia de axios
 
-export const useFetch = (url)  => {
-	const [data, setData] = useState(null) // Estado para almacenar los datos
-	const [loading, setLoading] = useState(true) // Estado de carga
-	const [error, setError] = useState(null) // Estado para almacenar errores
-	
-	useEffect(() => {
-		let controller = new AbortController(); // Para cancelar la petición si el componente se desmonta
-		
-		setLoading(true) // Iniciamos la carga cuando se monta el componente
-		
-		const fetchData = async () => { // Función asíncrona para obtener los datos
-			try {
-				const response = await fetch(url, controller); // Realizamos la petición
-				
-				if(!response.ok) {
-					throw new Error("Error en la petición") // Si la respuesta no es ok, lanzamos un error
-				}
-				
-				const jsonData = await response.json(); // Parseamos la respuesta a JSON
-				
-				setData(jsonData) // Actualizamos el estado con los datos obtenidos
-				setError(null) // Reseteamos el estado de error
-			} catch (err){
-				setError(err) // Actualizamos el estado con el error
-			} finally {
-				setLoading(false) // Finalizamos la carga haya sido error o no
-			}
-		}
-		fetchData(); // Llamamos a la función para obtener los datos
-		
-		return () => {
-		controller.abort() // Cancelamos la petición si el componente se desmonta
-		}
-		
-	}, [url])
-	return { data, loading, error } // Devolvemos los estados
-}
+export const useFetch = (endpoint) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get(endpoint);
+      setData(response.data);
+    } catch (err) {
+      setError(err.response?.data?.error || err.message || "Error desconocido");
+    } finally {
+      setLoading(false);
+    }
+  }, [endpoint]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
+};

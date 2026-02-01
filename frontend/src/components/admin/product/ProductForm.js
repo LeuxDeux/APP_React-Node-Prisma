@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { productsAPI } from '../services/productServices';
+import { productsAPI } from '../../../services/productServices';
 
 function ProductForm({ product, onSuccess, onCancel }) { // Componente para el formulario de creación/edición de productos. Recibe 3 props: product (objeto del producto a editar o null para nuevo), onSuccess (función a llamar tras guardar con éxito), onCancel (función a llamar para cancelar).
   const [formData, setFormData] = useState({ // Estado local para los datos del formulario. Valor inicial con campos vacíos.
@@ -21,6 +21,15 @@ function ProductForm({ product, onSuccess, onCancel }) { // Componente para el f
         price: product.price,
         category: product.category,
         stock: product.stock,
+      });
+    } else {
+      // Si no es edición (nuevo producto), limpiar el formulario.
+      setFormData({
+        name: '',
+        description: '',
+        price: '',
+        category: '',
+        stock: '',
       });
     }
   }, [product]); // Dependencia para ejecutar el efecto cuando cambie product.
