@@ -43,6 +43,7 @@ const usersController = {
   },
   createUser : async (req, res) => {
     const { username, password, address, phonenumber, email} = req.body;
+    console.log("Datos recibidos:", { username, password, address, phonenumber, email });
     if (!username || !password || !address || !phonenumber || !email || password.length < 6) {
       return res.status(400).json({
         success: false,
@@ -67,10 +68,12 @@ const usersController = {
         message: "User created successfully",
       });
     } catch (error) {
-      console.error("Error creating user:", error);
+      console.error("Error creating user:", error.message);
+      console.error("Error code:", error.code);
+      console.error("Error meta:", error.meta);
       res.status(500).json({
         success: false,
-        error: "Internal server error",
+        error: error.message || "Internal server error",
       });
     }
   },
