@@ -1,188 +1,173 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { userSchema } from "../../../schemas/usersSchema";
 import { usersAPI } from "../../../services/usersServices";
+// Importamos nuestros componentes atómicos
+import InputForm from "./InputForm";
+import SelectForm from "./SelectForm";
+import "./UserForm.css";
 
 function UserForm({ userToEdit, onSuccess, onClose }) {
-  // Componente para el formulario de creación/edición de usuarios. Recibe 3 props: userToEdit (objeto del usuario a editar o null para nuevo), onSuccess (función a llamar tras guardar con éxito), onClose (función a llamar para cancelar).
-  const [formData, setFormData] = useState({
-    // Estado local para los datos del formulario. Valor inicial con campos vacíos.
-    username: "",
-    password: "",
-    address: "",
-    phonenumber: "",
-    email: "",
-    role: "",
-  });
-  const [error, setError] = useState(null); // Estado para almacenar mensajes de error.
-  const [loading, setLoading] = useState(false); // Estado para indicar si se está procesando el envío del formulario.
+  /* 1. CONFIGURACIÓN
+  Como usamos react-hook-form con zod, configuramos el hook aquí
+  para manejar el formulario completo
+  Notar que desestructuramos lo que nos llega desde zodResolver(usersSchema)
 
-  const roles = [
+  */
+  const {
+    control, // Necesario para el componente Controller
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      address: "",
+      phonenumber: "",
+      role: "",
+    },
+  });
+
+  const ROLES = [
     { value: "admin", label: "ADMIN" },
     { value: "user", label: "USER" },
-  ]; // Opciones de roles disponibles
+  ];
 
-  
-  // Cargar datos si es edición
+  /* 2. EFECTO DE CARGA (Edición)
+  Cargamos los datos del usuario a editar en el formulario
+  Usamos reset() para establecer los valores del formulario
+  Si no hay userToEdit, reseteamos a valores vacíos
+  */
   useEffect(() => {
     if (userToEdit) {
-      // Si userToEdit existe es una edición, cargar los datos del usuario en el formulario.
-      setFormData({
+      reset({
         username: userToEdit.username,
+        email: userToEdit.email,
         address: userToEdit.address,
         phonenumber: userToEdit.phonenumber,
-        email: userToEdit.email,
         role: userToEdit.role,
+        password: "", // Password vacío al editar
       });
     } else {
-      // Si no es edición (nuevo usuario), limpiar el formulario.
-      setFormData({
+      reset({
         username: "",
-        password: "",
+        email: "",
         address: "",
         phonenumber: "",
-        email: "",
         role: "",
+        password: "",
       });
     }
-  }, [userToEdit]); // Dependencia para ejecutar el efecto cuando cambie userToEdit.
+  }, [userToEdit, reset]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target; // Obtener nombre y valor del campo modificado.
-    setFormData({
-      // Actualizar el estado formData con el nuevo valor.
-      ...formData, // Mantener los demás campos sin cambios o copia todos los datos existentes del formulario
-      [name]: value, // Actualizar solo el campo que cambió
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    // Manejador del envío del formulario.
-    e.preventDefault(); // Prevenir el comportamiento por defecto del formulario. En este caso recargar la página.
-    setError(null); // Limpiar errores previos
-
-    // Validación de que todos los campos estén llenos. Si alguno está vacio muestra error y no continúa.
-    if (
-      !formData.username ||
-      (!userToEdit && !formData.password) ||
-      !formData.address ||
-      !formData.phonenumber ||
-      !formData.email ||
-      !formData.role
-    ) {
-      setError("Todos los campos son requeridos");
-      return;
-    }
-
+  /* 3. SUBMIT
+  Manejador del submit del formulario
+  Diferenciamos entre creación y edición según userToEdit
+  Hacemos la llamada a la API correspondiente
+  Llamamos a onSuccess() si todo va bien
+  */
+  const onSubmit = async (data) => {
     try {
-      setLoading(true); // Activa loading para deshabilitar botón mientras se procesa.
-      if (userToEdit) {
-        // Si existe userToEdit llama UPDATE
-        // Editar
-        await usersAPI.updateUser(userToEdit.id, formData);
-      } else {
-        // Si no existe el usuario llama CREATE
-        // Crear
-        await usersAPI.createUser(formData);
+      // Validación manual de password requerido solo al crear
+      if (!userToEdit && !data.password) {
+        setError("password", { type: "manual", message: "La contraseña es obligatoria al crear" });
+        return;
       }
-      onSuccess(); // Llama a la función onSuccess pasada como prop para notificar que se guardó con éxito.
+
+      // Sanitización
+      const payload = { ...data };
+      if (!payload.password) delete payload.password;
+
+      if (userToEdit) {
+        await usersAPI.updateUser(userToEdit.id, payload);
+      } else {
+        await usersAPI.createUser(payload);
+      }
+      onSuccess();
     } catch (err) {
-      console.error("Error:", err);
-      setError(err.response?.data?.error || "Error al guardar usuario");
-    } finally {
-      // Finally siempre desactiva el loading
-      setLoading(false);
+      console.error(err);
+      alert(err.response?.data?.error || "Error al guardar");
     }
   };
 
+  /* 4. RENDERIZADO 
+  Zod se encarga de manejar los errores y de lo que se muestra
+  No hace las comprobaciones hasta el submit, así que no hay validación en tiempo real
+  Es más rápido y simple para formularios administrativos
+  */
   return (
-    <div
-      style={{
-        border: "1px solid #ccc",
-        padding: "20px",
-        marginBottom: "20px",
-      }}
-    >
-      <h2>{userToEdit ? "Editar Usuario" : "Nuevo Usuario"}</h2>{" "}
-      {/* Título dinámico según si es edición o creación. Si userToEdit existe muestra editar, sino nuevo */}
-      {error && (
-        <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
-      )}
-      <form onSubmit={handleSubmit}>
-        {" "}
-        {/* Manejador del envío del formulario */}
-        <div style={{ marginBottom: "10px" }}>
-          <label>Nombre Usuario:</label>
-          <input
-            type="text"
-            name="username"
-            value={formData.username} // Valor del campo nombre del estado
-            onChange={handleChange} // Manejador del cambio para actualizar el estado, lo ejecuta al escribir
-            style={{ width: "100%", padding: "8px" }}
+    <div className="user-form-container">
+      <div className="form-header">
+        <h2>{userToEdit ? "Editar Usuario" : "Nuevo Usuario"}</h2>
+        <button type="button" className="btn-close-x" onClick={onClose}>×</button>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="user-form">
+        
+        <InputForm
+          name="username"
+          label="Nombre Usuario"
+          control={control}
+          error={errors.username}
+        />
+
+        {/* El campo de password SOLO aparece al CREAR usuario, no al editar */}
+        {!userToEdit && (
+          <InputForm
+            name="password"
+            label="Contraseña *"
+            type="password"
+            control={control}
+            error={errors.password}
           />
-        </div>
-        {userToEdit ? null : ( // Mostrar campo contraseña solo si es creación
-          <div style={{ marginBottom: "10px" }}>
-            <label>Contraseña:</label>
-            <input
-              name="password"
-              type="password"
-              value={formData.password} // Valor del campo contraseña del estado
-              onChange={handleChange} // Manejador del cambio para actualizar el estado, lo ejecuta al escribir
-              style={{ width: "100%", padding: "8px" }}
+        )}
+
+        <InputForm
+          name="address"
+          label="Dirección"
+          control={control}
+          error={errors.address}
+        />
+
+        <div className="form-row">
+          <div className="half-width">
+            <InputForm
+              name="phonenumber"
+              label="Teléfono"
+              control={control}
+              error={errors.phonenumber}
             />
           </div>
-        )}
-        <div style={{ marginBottom: "10px" }}>
-          <label>Dirección:</label>
-          <input
-            type="text"
-            name="address"
-            value={formData.address} // Valor del campo dirección del estado
-            onChange={handleChange} // Manejador del cambio para actualizar el estado, lo ejecuta al escribir
-            style={{ width: "100%", padding: "8px" }}
-          />
+          <div className="half-width">
+            <InputForm
+              name="email"
+              label="Email"
+              type="email"
+              control={control}
+              error={errors.email}
+            />
+          </div>
         </div>
-        <div style={{ marginBottom: "10px" }}>
-          <label>Teléfono:</label>
-          <input
-            type="text"
-            name="phonenumber"
-            value={formData.phonenumber} // Valor del campo teléfono del estado
-            onChange={handleChange} // Manejador del cambio para actualizar el estado, lo ejecuta al escribir
-            style={{ width: "100%", padding: "8px" }}
-          />
-        </div>
-        <div style={{ marginBottom: "10px" }}>
-          <label>Email:</label>
-          <input
-            type="text"
-            name="email"
-            value={formData.email} // Valor del campo email del estado
-            onChange={handleChange} // Manejador del cambio para actualizar el estado, lo ejecuta al escribir
-            style={{ width: "100%", padding: "8px" }}
-          />
-        </div>
-        <div style={{ marginBottom: "10px" }}>
-          <label>Rol:</label>
-          <select
+
+        <SelectForm 
             name="role"
-            value={formData.role}
-            onChange={handleChange}
-            style={{ width: "100%", padding: "8px" }}
-          >
-            <option value="">-- Selecciona un rol --</option>
-            {roles.map((rol) => (
-              <option key={rol.value} value={rol.value}>
-                {rol.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button type="submit" disabled={loading}>
-            {loading ? "Guardando..." : "Guardar"}
-          </button>
-          <button type="button" onClick={onClose}>
+            label="Rol"
+            control={control}
+            options={ROLES}
+            error={errors.role}
+        />
+
+        <div className="form-actions">
+          <button type="button" className="btn-secondary" onClick={onClose}>
             Cancelar
+          </button>
+          <button type="submit" className="btn-primary" disabled={isSubmitting}>
+            {isSubmitting ? "Guardando..." : "Guardar"}
           </button>
         </div>
       </form>

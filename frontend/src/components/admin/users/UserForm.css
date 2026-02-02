@@ -1,0 +1,183 @@
+/* =========================================
+   CONTENEDOR PRINCIPAL (Modal Content)
+   ========================================= */
+.user-form-container {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 550px; /* Ancho máximo ideal para lectura */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  /* Animación suave de entrada */
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   HEADER DEL FORMULARIO
+   ========================================= */
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.form-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827; /* Gris muy oscuro */
+}
+
+.btn-close-x {
+  background: transparent;
+  border: none;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.btn-close-x:hover {
+  color: #ef4444; /* Rojo al pasar el mouse */
+}
+
+/* =========================================
+   INPUTS Y LABELS (Componentes Common)
+   ========================================= */
+.form-group {
+  margin-bottom: 1.25rem; /* Espaciado vertical entre campos */
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151; /* Gris medio */
+}
+
+/* Estilo base del input y select */
+.form-control {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #1f2937;
+  background-color: #fff;
+  border: 1px solid #d1d5db; /* Gris suave */
+  border-radius: 0.375rem; /* Bordes ligeramente redondeados (6px) */
+  box-sizing: border-box; /* CRUCIAL: Para que el padding no rompa el ancho */
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Estado Focus (Cuando el usuario hace clic) */
+.form-control:focus {
+  border-color: #3b82f6; /* Azul estándar */
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); /* Anillo de luz azul */
+}
+
+/* Estado de Error (Cuando Zod rechaza) */
+.form-control.is-invalid {
+  border-color: #dc2626; /* Rojo error */
+  background-color: #fef2f2; /* Fondo rojizo muy suave */
+}
+
+.form-control.is-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25); /* Anillo rojo */
+}
+
+/* Mensaje de error debajo del input */
+.error-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+/* =========================================
+   LAYOUT (Filas y Columnas)
+   ========================================= */
+.form-row {
+  display: flex;
+  gap: 1rem; /* Espacio entre columnas */
+}
+
+.half-width {
+  flex: 1; /* Ambos ocupan el 50% */
+}
+
+/* =========================================
+   BOTONES DE ACCIÓN
+   ========================================= */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+button {
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: #2563eb;
+  color: white;
+  border: 1px solid transparent;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-primary:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* =========================================
+   RESPONSIVE (Móviles)
+   ========================================= */
+@media (max-width: 480px) {
+  .user-form-container {
+    padding: 1.5rem;
+  }
+
+  .form-row {
+    flex-direction: column; /* Apilar columnas en móviles */
+    gap: 0;
+  }
+}

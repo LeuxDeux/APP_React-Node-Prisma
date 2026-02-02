@@ -103,7 +103,7 @@ const usersController = {
   },
   updateUser: async (req, res) => {
     const { id } = req.params;
-    const { username, address, phonenumber, email } = req.body;
+    const { username, address, phonenumber, email, role } = req.body;
     try {
       await prisma.user.update({
         where: { id: parseInt(id) },
@@ -112,6 +112,7 @@ const usersController = {
           address,
           phonenumber,
           email,
+          role,
         },
       });
       res.json({
@@ -131,7 +132,6 @@ const usersController = {
         error: "Internal server error",
       });
     }
-  },
-};
-
+  },     
+}
 module.exports = usersController;

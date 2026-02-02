@@ -85,7 +85,7 @@ const UserList = () => {
                 <tr key={user.id}>
                   <td>{user.username}</td>
                   <td>{user.address || "-"}</td>
-                  <td>{user.phone || "-"}</td>
+                  <td>{user.phonenumber || "-"}</td>
                   <td>{user.email}</td>
                   <td>
                     <span
