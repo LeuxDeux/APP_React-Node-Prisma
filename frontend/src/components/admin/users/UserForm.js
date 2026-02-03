@@ -1,85 +1,78 @@
-import { useEffect } from "react";
+import { useMemo } from "react"; // Importamos useMemo
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userSchema } from "../../../schemas/usersSchema";
 import { usersAPI } from "../../../services/usersServices";
-// Importamos nuestros componentes atómicos
-import InputForm from "./InputForm";
-import SelectForm from "./SelectForm";
-import "./UserForm.css";
+import InputForm from "../common/InputForm";
+import SelectForm from "../common/SelectForm";
+import "../common/styles/FormStyles.css";
+
+// 1. CONSTANTES 
+// Lo ponemos acá para no andar repitiendo la declaración de campos vacíos
+const DEFAULT_VALUES = {
+  username: "",
+  email: "",
+  password: "", // Siempre inicia vacío
+  address: "",
+  phonenumber: "",
+  role: "",
+};
+
+const ROLES = [ // Opciones para el select de roles. #TODO: Dinamizar si hay más roles
+  { value: "admin", label: "ADMIN" },
+  { value: "user", label: "USER" },
+];
 
 function UserForm({ userToEdit, onSuccess, onClose }) {
-  /* 1. CONFIGURACIÓN
-  Como usamos react-hook-form con zod, configuramos el hook aquí
-  para manejar el formulario completo
-  Notar que desestructuramos lo que nos llega desde zodResolver(usersSchema)
-
-  */
-  const {
-    control, // Necesario para el componente Controller
-    handleSubmit,
-    reset,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-      address: "",
-      phonenumber: "",
-      role: "",
-    },
-  });
-
-  const ROLES = [
-    { value: "admin", label: "ADMIN" },
-    { value: "user", label: "USER" },
-  ];
-
-  /* 2. EFECTO DE CARGA (Edición)
-  Cargamos los datos del usuario a editar en el formulario
-  Usamos reset() para establecer los valores del formulario
-  Si no hay userToEdit, reseteamos a valores vacíos
-  */
-  useEffect(() => {
+  
+  // 2. MEMOIZACIÓN DE VALORES
+  // Calculamos los valores iniciales. Si userToEdit cambia, esto se recalcula.
+  // Esto reemplaza completamente a tu useEffect.
+  // El useMemo es un Hook de React que memoriza un valor calculado, en este caso el objeto de valores iniciales.
+  const initialValues = useMemo(() => {
     if (userToEdit) {
-      reset({
+      return {
         username: userToEdit.username,
         email: userToEdit.email,
         address: userToEdit.address,
         phonenumber: userToEdit.phonenumber,
         role: userToEdit.role,
-        password: "", // Password vacío al editar
-      });
-    } else {
-      reset({
-        username: "",
-        email: "",
-        address: "",
-        phonenumber: "",
-        role: "",
-        password: "",
-      });
+        password: "", // Al editar, reseteamos password a vacío
+      };
     }
-  }, [userToEdit, reset]);
+    return DEFAULT_VALUES;
+  }, [userToEdit]);
 
-  /* 3. SUBMIT
-  Manejador del submit del formulario
-  Diferenciamos entre creación y edición según userToEdit
-  Hacemos la llamada a la API correspondiente
-  Llamamos a onSuccess() si todo va bien
-  */
+  // 3. CONFIGURACIÓN DEL REACT HOOK FORM
+  // -control: objeto de control del formulario. Es para el objeto Controller.
+  // -handleSubmit: función para manejar el submit
+  // -setError: función para setear errores manualmente
+  // -errors: objeto con errores de validación
+  // -isSubmitting: booleano que indica si el formulario se está enviando
+  const {
+    control,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(userSchema), // El resolver de Zod para validación, usa el Schema definido
+    defaultValues: DEFAULT_VALUES, // Valores por defecto para el primer render
+    values: initialValues,         // <--- LA CLAVE: Reactiva el formulario ante cambios
+    resetOptions: {
+      keepDirtyValues: true,       // Opcional: Si el usuario estaba escribiendo y cambia algo externo, intenta mantener lo escrito
+    },
+  });
+
+  // 4. SUBMIT
   const onSubmit = async (data) => {
     try {
-      // Validación manual de password requerido solo al crear
+      // Validación de borde: Password obligatorio solo al crear
       if (!userToEdit && !data.password) {
-        setError("password", { type: "manual", message: "La contraseña es obligatoria al crear" });
+        setError("password", { message: "La contraseña es obligatoria al crear" });
         return;
       }
 
-      // Sanitización
+      // Sanitización del payload
       const payload = { ...data };
       if (!payload.password) delete payload.password;
 
@@ -91,15 +84,11 @@ function UserForm({ userToEdit, onSuccess, onClose }) {
       onSuccess();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.error || "Error al guardar");
+      // Asumiendo que su backend devuelve { error: "Mensaje" }
+      alert(err.response?.data?.error || "Error al procesar la solicitud");
     }
   };
 
-  /* 4. RENDERIZADO 
-  Zod se encarga de manejar los errores y de lo que se muestra
-  No hace las comprobaciones hasta el submit, así que no hay validación en tiempo real
-  Es más rápido y simple para formularios administrativos
-  */
   return (
     <div className="user-form-container">
       <div className="form-header">
@@ -116,7 +105,7 @@ function UserForm({ userToEdit, onSuccess, onClose }) {
           error={errors.username}
         />
 
-        {/* El campo de password SOLO aparece al CREAR usuario, no al editar */}
+        {/* Renderizado Condicional Limpio */}
         {!userToEdit && (
           <InputForm
             name="password"

@@ -1,8 +1,8 @@
 import React, { useState } from "react"; // Ya no necesitamos useEffect aquí
 import { useNavigate } from "react-router-dom";
 import UserForm from "./UserForm";
-import "./UserList.css";
-// import { usersAPI } ... Ya no se usa directamente aquí, lo maneja el hook
+import "../common/styles/ListStyles.css";
+import { usersAPI } from "../../../services/usersServices"; 
 import { useFetch } from "../../../hooks/useFetch"; // Importamos el hook
 
 const UserList = () => {
@@ -13,12 +13,12 @@ const UserList = () => {
   // 2. ESTADOS DEL MODAL (Esto sí es responsabilidad de la UI local)
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  
+
   const navigate = useNavigate();
 
   // 3. PROCESAMIENTO DE DATOS
   // Su API devuelve { users: [...] }, así que extraemos el array de forma segura
-  const users = data?.users || []; 
+  const users = data?.users || [];
 
   // 4. MANEJADORES (Handlers)
   const handleBack = () => navigate("/dashboard");
@@ -27,6 +27,18 @@ const UserList = () => {
     setEditingUser(null);
     setShowForm(true);
   };
+
+   const handleDeleteUser = async (id) => {
+      if (window.confirm("¿Estás seguro de que deseas eliminar este usuario?")) {
+        try {
+          await usersAPI.deleteUserByID(id);
+          refetch();
+        } catch (err) {
+          console.error("Error deleting:", err);
+          alert("Error al eliminar usuario");
+        }
+      }
+    };
 
   const handleEdit = (user) => {
     setEditingUser(user);
@@ -46,13 +58,14 @@ const UserList = () => {
 
   // 5. RENDERIZADO (Early Returns)
   // Nota: Mantenemos loading bloqueante solo si NO hay modal abierto
-  if (loading && !showForm) return <div className="loading-msg">Cargando usuarios...</div>;
+  if (loading && !showForm)
+    return <div className="loading-msg">Cargando usuarios...</div>;
   if (error) return <div className="error-msg">Error: {error}</div>;
 
   return (
-    <div className="user-list-container">
+    <div className="list-container">
       {/* Encabezado */}
-      <div className="user-list-header">
+      <div className="list-header">
         <button
           className="btn btn-back"
           onClick={handleBack}
@@ -60,16 +73,16 @@ const UserList = () => {
         >
           ← Atrás
         </button>
-        <h1 className="header-title">Gestión de Usuarios</h1>
-        <button className="btn btn-new-user" onClick={handleNewUser}>
+        <h1 className="list-title">Gestión de Usuarios</h1>
+        <button className="btn btn-new" onClick={handleNewUser}>
           + Nuevo Usuario
         </button>
       </div>
 
       {/* Tabla */}
-      <div className="users-table-wrapper">
+      <div className="table-wrapper">
         {users.length > 0 ? (
-          <table className="users-table">
+          <table className="data-table">
             <thead>
               <tr>
                 <th>Nombre de Usuario</th>
@@ -102,13 +115,20 @@ const UserList = () => {
                     >
                       ✏️ Editar
                     </button>
+                    <button
+                      className="btn btn-delete"
+                      onClick={() => handleDeleteUser(user.id)}
+                      title="Eliminar usuario"
+                    >
+                      🗑️ Eliminar
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p className="no-users">No hay usuarios registrados</p>
+          <p className="no-items">No hay usuarios registrados</p>
         )}
       </div>
 

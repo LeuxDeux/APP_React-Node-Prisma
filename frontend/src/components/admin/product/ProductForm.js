@@ -1,142 +1,122 @@
-import { useState, useEffect } from 'react';
-import { productsAPI } from '../../../services/productServices';
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { productSchema } from "../../../schemas/productsSchema"; // Ajustar ruta
+import { productsAPI } from "../../../services/productServices"; // Ajustar ruta
+import InputForm from "../common/InputForm";
+import TextAreaForm from "../common/TextAreaForm"; // El nuevo componente
+import "../common/styles/FormStyles.css"; // Reutilizamos el CSS de usuarios 
 
-function ProductForm({ product, onSuccess, onCancel }) { // Componente para el formulario de creación/edición de productos. Recibe 3 props: product (objeto del producto a editar o null para nuevo), onSuccess (función a llamar tras guardar con éxito), onCancel (función a llamar para cancelar).
-  const [formData, setFormData] = useState({ // Estado local para los datos del formulario. Valor inicial con campos vacíos.
-    name: '',
-    description: '',
-    price: '',
-    category: '',
-    stock: '',
-  });
-  const [error, setError] = useState(null); // Estado para almacenar mensajes de error.
-  const [loading, setLoading] = useState(false); // Estado para indicar si se está procesando el envío del formulario.
+const DEFAULT_VALUES = {
+  name: "",
+  description: "",
+  price: "",
+  category: "",
+  stock: "",
+};
 
-  // Cargar datos si es edición
-  useEffect(() => {
-    if (product) { // Si product existe es una edición, cargar los datos del producto en el formulario.
-      setFormData({
+function ProductForm({ product, onSuccess, onCancel }) {
+  // 1. Memoizamos valores iniciales
+  const initialValues = useMemo(() => {
+    if (product) {
+      return {
         name: product.name,
         description: product.description,
         price: product.price,
         category: product.category,
         stock: product.stock,
-      });
-    } else {
-      // Si no es edición (nuevo producto), limpiar el formulario.
-      setFormData({
-        name: '',
-        description: '',
-        price: '',
-        category: '',
-        stock: '',
-      });
+      };
     }
-  }, [product]); // Dependencia para ejecutar el efecto cuando cambie product.
+    return DEFAULT_VALUES;
+  }, [product]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target; // Obtener nombre y valor del campo modificado.
-    setFormData({  // Actualizar el estado formData con el nuevo valor.
-      ...formData,  // Mantener los demás campos sin cambios o copia todos los datos existentes del formulario
-      [name]: value,  // Actualizar solo el campo que cambió
-    });
-  };
+  // 2. Configuración RHF
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(productSchema),
+    defaultValues: DEFAULT_VALUES,
+    values: initialValues,
+  });
 
-  const handleSubmit = async (e) => { // Manejador del envío del formulario.
-    e.preventDefault();  // Prevenir el comportamiento por defecto del formulario. En este caso recargar la página.
-    setError(null); // Limpiar errores previos  
-
-    // Validación de que todos los campos estén llenos. Si alguno está vacio muestra error y no continúa.
-    if (!formData.name || !formData.description || !formData.price || !formData.category || !formData.stock) {
-      setError('Todos los campos son requeridos');
-      return;
-    }
-
+  // 3. Submit
+  const onSubmit = async (data) => {
     try {
-      setLoading(true); // Activa loading para deshabilitar botón mientras se procesa.
-      if (product) { // Si existe product llama UPDATe
-        // Editar
-        await productsAPI.updateProduct(product.id, formData);
-      } else {  // Si no existe el producto llama CREATE
-        // Crear
-        await productsAPI.createProduct(formData);
+      // Zod ya convirtió price y stock a números.
+      // El backend de Lactato espera name, description, price, category, stock.
+
+      if (product) {
+        await productsAPI.updateProduct(product.id, data);
+      } else {
+        await productsAPI.createProduct(data);
       }
-      onSuccess(); // Llama a la función onSuccess pasada como prop para notificar que se guardó con éxito.
+      onSuccess();
     } catch (err) {
-      console.error('Error:', err);
-      setError(err.response?.data?.error || 'Error al guardar producto');
-    } finally { // Finally siempre desactiva el loading
-      setLoading(false);
+      console.error(err);
+      alert(err.response?.data?.error || "Error al guardar producto");
     }
   };
 
   return (
-    <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
-      <h2>{product ? 'Editar Producto' : 'Nuevo Producto'}</h2> {/* Título dinámico según si es edición o creación. Si product existe muestra editar, sino nuevo */}
-      
-      {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+    <div className="user-form-container">
+      <div className="form-header">
+        <h2>{product ? "Editar Producto" : "Nuevo Producto"}</h2>
+        <button type="button" className="btn-close-x" onClick={onCancel}>
+          ×
+        </button>
+      </div>
 
-      <form onSubmit={handleSubmit}> {/* Manejador del envío del formulario */}
-        <div style={{ marginBottom: '10px' }}>
-          <label>Nombre:</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name} // Valor del campo nombre del estado
-            onChange={handleChange} // Manejador del cambio para actualizar el estado, lo ejecuta al escribir
-            style={{ width: '100%', padding: '8px' }}
-          />
-        </div>
-        <div style={{ marginBottom: '10px' }}>
-          <label>Descripción:</label>
-          <textarea
-            name="description"
-            value={formData.description} // Valor del campo descripción del estado
-            onChange={handleChange} // Manejador del cambio para actualizar el estado, lo ejecuta al escribir
-            style={{ width: '100%', padding: '8px', minHeight: '80px' }}
-          />
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="user-form">
+        <InputForm
+          name="name"
+          label="Nombre del Producto"
+          control={control}
+          error={errors.name}
+        />
 
-        <div style={{ marginBottom: '10px' }}>
-          <label>Precio:</label>
-          <input
-            type="number"
-            name="price"
-            value={formData.price} // Valor del campo precio del estado
-            onChange={handleChange} // Manejador del cambio para actualizar el estado, lo ejecuta al escribir
-            step="0.01"
-            style={{ width: '100%', padding: '8px' }}
-          />
-        </div>
+        <TextAreaForm
+          name="description"
+          label="Descripción"
+          control={control}
+          error={errors.description}
+        />
 
-        <div style={{ marginBottom: '10px' }}>
-          <label>Categoría:</label>
-          <input
-            type="text"
-            name="category"
-            value={formData.category} // Valor del campo categoría del estado
-            onChange={handleChange} // Manejador del cambio para actualizar el estado, lo ejecuta al escribir
-            style={{ width: '100%', padding: '8px' }}
-          />
+        <div className="form-row">
+          <div className="half-width">
+            <InputForm
+              name="category"
+              label="Categoría"
+              control={control}
+              error={errors.category}
+            />
+          </div>
+          <div className="half-width">
+            <InputForm
+              name="price"
+              label="Precio ($)"
+              type="number"
+              control={control}
+              error={errors.price}
+            />
+          </div>
         </div>
 
-        <div style={{ marginBottom: '10px' }}>
-          <label>Stock:</label>
-          <input
-            type="number"
-            name="stock"
-            value={formData.stock}
-            onChange={handleChange}
-            style={{ width: '100%', padding: '8px' }}
-          />
-        </div>
+        <InputForm
+          name="stock"
+          label="Stock Disponible"
+          type="number"
+          control={control}
+          error={errors.stock}
+        />
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button type="submit" disabled={loading}>
-            {loading ? 'Guardando...' : 'Guardar'}
-          </button>
-          <button type="button" onClick={onCancel}>
+        <div className="form-actions">
+          <button type="button" className="btn-secondary" onClick={onCancel}>
             Cancelar
+          </button>
+          <button type="submit" className="btn-primary" disabled={isSubmitting}>
+            {isSubmitting ? "Guardando..." : "Guardar"}
           </button>
         </div>
       </form>
