@@ -1,18 +1,38 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const cors = require('cors');
 require('dotenv').config();
 
+//Inicializo express
 const app = express();
-const server = require('http').createServer(app);
+//Creamos el server HTTP antes que Socket.io
+const server = http.createServer(app);
+//Declaramos el puerto
 const PORT = process.env.PORT || 5000;
 
+//Configuración de Socket.io 
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  },
+});
+
+//Middlewares globales
 app.use(cors());
 app.use(express.json());
 
+//Middleware de Socket.io (va acá y no aparte porque es una inyección simple)
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
 
+//Rutas
 app.use('/api/products', require('./routes/products'));
-app.use('/api/users', require('./routes/users'));//Ruta para usuarios
-app.use('/api/auth', require('./routes/auth'));//Ruta para autenticacion
+app.use('/api/users', require('./routes/users'));
+app.use('/api/auth', require('./routes/auth'));
 
 app.get('/api/health', (req, res) => {
     res.json({ 
@@ -35,8 +55,20 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+/*app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
+});*/
+
+server.listen(PORT, () => {
+    console.log(`El servidor corre en ${PORT}`);
+})
+
+io.on("connection", (socket) => {
+    console.log('Bienvenido usuario', socket.id);
+
+    socket.on("disconnect", () => {
+        console.log('Usuario desconectado', socket.id);
+    });
 });
 
 module.exports = { app, server };

@@ -59,6 +59,9 @@ const productsController = {
         },
       });
 
+      //Integramos Socket.io (avisamos en tiempo real que se creó un producto)
+      req.io.emit("server:products_updated");
+
       res.status(201).json({
         success: true,
         productId: product.id,
@@ -78,6 +81,8 @@ const productsController = {
       await prisma.product.delete({
         where: { id: parseInt(id) },
       });
+      //Integramos Socket.io (avisamos en tiempo real que se eliminó un producto)
+      req.io.emit("server:products_updated");
       res.json({
         success: true,
         product: "Product deleted successfully",
@@ -110,6 +115,8 @@ const productsController = {
           stock: parseInt(stock),
         },
       });
+      //Integramos Socket.io (avisamos en tiempo real que se creó un producto)
+      req.io.emit("server:products_updated");
       res.json({
         success: true,
         message: "Product updated successfully",

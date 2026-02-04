@@ -41,10 +41,23 @@ const usersController = {
       });
     }
   },
-  createUser : async (req, res) => {
-    const { username, password, address, phonenumber, email} = req.body;
-    console.log("Datos recibidos:", { username, password, address, phonenumber, email });
-    if (!username || !password || !address || !phonenumber || !email || password.length < 6) {
+  createUser: async (req, res) => {
+    const { username, password, address, phonenumber, email } = req.body;
+    console.log("Datos recibidos:", {
+      username,
+      password,
+      address,
+      phonenumber,
+      email,
+    });
+    if (
+      !username ||
+      !password ||
+      !address ||
+      !phonenumber ||
+      !email ||
+      password.length < 6
+    ) {
       return res.status(400).json({
         success: false,
         error: "Problemas en los campos del formulario",
@@ -61,7 +74,7 @@ const usersController = {
           email,
         },
       });
-
+      req.io.emit("server:users_updated");
       res.status(201).json({
         success: true,
         userId: newUser.id,
@@ -83,6 +96,7 @@ const usersController = {
       await prisma.user.delete({
         where: { id: parseInt(id) },
       });
+      req.io.emit("server:users_updated");
       res.json({
         success: true,
         message: "User deleted successfully",
@@ -115,6 +129,7 @@ const usersController = {
           role,
         },
       });
+      req.io.emit("server:users_updated");
       res.json({
         success: true,
         message: "User updated successfully",
@@ -132,6 +147,6 @@ const usersController = {
         error: "Internal server error",
       });
     }
-  },     
-}
+  },
+};
 module.exports = usersController;

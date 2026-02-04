@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import ProductForm from "./ProductForm";
 import { useFetch } from "../../../hooks/useFetch"; // Su hook personalizado
 import { productsAPI } from "../../../services/productServices";
@@ -50,6 +51,23 @@ function ProductList() {
       }
     }
   };
+
+  // EFECTO DE WEBSOCKET
+  useEffect(() => {
+    // 1. Conectamos al servidor
+    const socket = io("http://localhost:5000"); // URL de su Backend
+
+    // 2. Escuchamos el evento
+    socket.on("server:products_updated", () => {
+      console.log("¡Cambio detectado! Recargando lista...");
+      refetch(); // <-- La magia: vuelve a pedir los datos a la API
+    });
+
+    // 3. Limpieza (Cleanup): Desconectamos al salir de la pantalla
+    return () => {
+      socket.disconnect();
+    };
+  }, [refetch]); // Dependencia: refetch
 
   // 4. Render
   if (loading && !showForm)

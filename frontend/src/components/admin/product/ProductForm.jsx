@@ -39,6 +39,7 @@ function ProductForm({ product, onSuccess, onCancel }) {
     resolver: zodResolver(productSchema),
     defaultValues: DEFAULT_VALUES,
     values: initialValues,
+    
   });
 
   // 3. Submit
