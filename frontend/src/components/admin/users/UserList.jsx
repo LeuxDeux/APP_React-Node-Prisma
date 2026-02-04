@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"; // Ya no necesitamos useEffect aquí
+import { useState } from "react"; 
 import { useNavigate } from "react-router-dom";
-import { io } from "socket.io-client";
 import UserForm from "./UserForm";
 import "../common/styles/ListStyles.css";
 import { usersAPI } from "../../../services/usersServices"; 
 import { useFetch } from "../../../hooks/useFetch"; // Importamos el hook
+import { useSocketListener } from "../../../hooks/useSocketListener";
 
 const UserList = () => {
   // 1. DATA FETCHING (Delegado al Hook)
@@ -57,22 +57,7 @@ const UserList = () => {
     refetch(); // <-- ¡MAGIA! Aquí obligamos al hook a pedir los datos de nuevo
   };
 
-  // EFECTO DE WEBSOCKET
-  useEffect(() => {
-    // 1. Conectamos al servidor
-    const socket = io("http://localhost:5000"); // URL de su Backend
-
-    // 2. Escuchamos el evento
-    socket.on("server:users_updated", () => {
-      console.log("¡Cambio detectado! Recargando lista...");
-      refetch(); // <-- La magia: vuelve a pedir los datos a la API
-    });
-
-    // 3. Limpieza (Cleanup): Desconectamos al salir de la pantalla
-    return () => {
-      socket.disconnect();
-    };
-  }, [refetch]); // Dependencia: refetch
+  useSocketListener("server:users_updated", refetch);
 
   // 5. RENDERIZADO (Early Returns)
   // Nota: Mantenemos loading bloqueante solo si NO hay modal abierto
